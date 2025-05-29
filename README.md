@@ -1,7 +1,5 @@
 # Stress-testing
 
-# Security-Testing
-
 ## 📋 Table of Contents
 
 1. [Security Testing Objectives](#%EF%B8%8F-a-brief-description-of-the-acs-security-testing-project)
@@ -35,443 +33,323 @@
 9. [Opportunities for future research](#-opportunities-for-future-research)
 10. [Authors](#authors)
 
-## 🛡️ A brief description of the ACS security testing project
+## 📌 Purpose of testing
 
-The information security level of the access control and management system (ACS) with two-factor authentication has been tested.
-A specialized Kali Linux distribution was used for testing, which includes security audit and penetration testing tools.
-Testing objectives:
+The purpose of load testing is to evaluate the performance, resilience, and fault tolerance of key components of an access control and management system (ACS) while simultaneously processing a large number of requests. Testing allows us to determine how effectively the system copes with the peak load that occurs in the case of simultaneous actions by multiple users, such as entry/exit via RFID cards, biometric authentication, registration of new users and monitoring of events in real time.
 
-1 Identification of vulnerabilities in the components of the ACS: the database web interface, the dashboard, and the backend;
+Assigned tasks:
 
-2 Assessment of resistance to typical cyber attacks.
+- Estimate the average response time for each ACS component under load;
 
-Conducted tests:
+- Check the system's ability to process a large number of parallel requests without errors;
 
-1 DoS/DDoS attacks (Ping flood, UDP flood, SYN flood) using hping3 utility;
+- Determine the throughput of the system (Throughput);
 
-2 An HTTP/2 Rapid Reset attack aimed at overloading the server through the thread reset mechanism;
+- Make sure that the indicators are within acceptable limits, allowing the use of ACS in real time.;
 
-3 Brute Force Attack on Login Forms Using Fuzz and Password Dictionary rockyou.txt .
+- Identify potential bottlenecks or vulnerable architecture elements that may cause performance degradation.
 
-## 🧰 The hardware and software used
+The test results will be used for:
 
-The following hardware and software tools were used as part of the security testing project for the access control and management system (ACS):
+- Confirmation of the suitability of the system for operation under high load conditions;
 
-### 1. 🖥️ Hardware:
+- Optimizing component configuration (if necessary);
 
-- Arduino Uno is a microcontroller used to read RFID tags;
+- Preparing to scale the system as the number of users increases.
 
-- RFID module RC522 is a radio frequency identification module for reading MIFARE cards;
+## 🧪 Testing objects
 
-- USB camera — used for biometric authentication by facial recognition;
+As part of the load testing, the key components of the access control and management system (ACS) were identified, which are subject to testing for resistance to high load. Each component performs a critical function and must demonstrate stable performance under heavy use.
 
-- Server/PC running Windows 11 — to run the web interface, dashboard, and analysis;
+### 📶 RFID Authentication module
 
-- A local network is used to organize the interaction of ACS components and conduct network attacks.
+This module processes input/output requests based on user identification using RFID cards. The testing is aimed at verifying the system's ability to simultaneously handle multiple requests from different RFID devices.
 
-### 2. 🧑‍💻 Software (ACS):
+### 🧍‍♂ Biometric authentication module
 
-- Flask (Python) is a web framework for creating a REST API, dashboard, and administration interface.;
+Responsible for face recognition and making decisions about granting access. The purpose of the test is to evaluate the behavior of the system with simultaneous biometric verification of several users.
 
-- MySQL — a database for storing information about users and access events;
+### 📝 Web interface for registering new users
 
-- Flask-Limiter — a module for limiting the frequency of requests (protection against DoS and brute force);
+This component provides interaction with the database when new users are added. The stability of the interface is checked during mass registration.
 
-- OpenCV and face_recognition are libraries for face recognition at the entrance;
+### 📊 Dashboard
 
-- FlaskWebGUI is a wrapper for running the interface as a desktop application;
+A component that displays access events and the current status of users in real time. Its ability to handle frequent updates and display up-to-date information without delay is being tested.
 
-- A custom Python script implements IP address filtering, attacker blocking, and event logging.
+## 🛠 Testing Tool
 
-### 3. 🖥️ Testing Software (Kali Linux):
+To perform load testing of the access control and management system (ACS), the Apache JMeter tool was used, a powerful and extensible open source software designed to test the performance and behavior of web applications and various servers under load.
 
-- Kali Linux OS is a specialized distribution for conducting security audits and penetration testing;
+### 💡 The rationale for choosing Apache JMeter
 
-- hping3 is a network packet generation utility for implementing DoS attacks (Ping Flood, SYN Flood, UDP Flood);
+Apache JMeter was chosen for the following reasons:
 
-- Wfuzz is a tool for brute force attacks on web forms;
+- Support for various protocols: including HTTP(S), JDBC, LDAP, FTP, TCP and others, which allows flexible modeling of different types of load.
 
-- iptables is a configurable firewall in Linux (as an alternative to Windows Firewall).
+- Flexible configuration of load scenarios: the ability to set the number of virtual users, the frequency of requests, pauses between actions and a gradual increase in load.
 
-## 🔧 Additional Kali Linux Tools
+- Visualization of results: Provides graphs, tables, and reports that allow you to evaluate system performance using a variety of metrics.
 
-Kali Linux includes more than 600 utilities covering all stages of penetration testing and security analysis. In addition to the tools already used in the project (hping3, Wfuzz, Nmap, etc.), the distribution package includes the following categories and utilities:
+- Plugin and script support: allows you to extend standard functions using third-party extensions and writing logic in BeanShell, Groovy or JSR223.
 
-### 🛠️ 1. Vulnerability scanners
+- Automation and repeatability of tests: the ability to re-run identical scenarios to analyze the stability of the results.
 
-1 OpenVAS is a powerful system for comprehensive vulnerability analysis;
+### 🧩 JMeter Configuration
 
-2 Vulners and Searchsploit — databases of exploits and vulnerabilities;
+An individual configuration has been created in JMeter for each test scenario. Basic settings:
 
-3 Skipfish is a web application security scanner with support for automatic report generation.
+1 Number of virtual users (Threads): 200
 
-### 🌐 2. Traffic Analysis Tools
+2 Acceleration time of the load (Ramp-Up Period): 5 seconds — users connect gradually during this time.
 
-1 Wireshark is a powerful network traffic sniffer and analyzer;
+3 Number of requests per user: 10 — each user executes 10 HTTP requests sequentially.
 
-2 tcpdump is a command—line tool for capturing network packets;
+4 Total number of requests: 2000 (200 users × 10 requests)
 
-3 Ettercap is a utility for Man-in-the-Middle (MITM) attacks.
+5 Request Type: HTTP Request
 
-### 📂 3. Attacks on web applications
+6 Method: POST (or GET, depending on the component under test)
 
-1 OWASP ZAP (Zed Attack Proxy) is an alternative to Burp Suite, used to find vulnerabilities in web applications;
+7 Request body: contained parameters that mimic real user actions (for example, RFID code, photo, registration data, etc.)
 
-2 sqlmap is an automatic tool for performing SQL injections and capturing data from a database.;
+8  Content-Type: application/json or application/x-www-form-urlencoded, depending on the API.
 
-3 Commix is a tool for testing for the presence of command injections.
+### 🌐 The elements of the Test Plan used
 
-### 🛡️ 4. Password analysis tools
+Each load test included the following elements:
 
-1 Hydra is a utility for sorting passwords using various protocols (FTP, SSH, HTTP, etc.);
+1 The Thread Group - Determines the number of users, duration, and intensity of the test.
 
-2 Medusa is an analog of Hydra with the possibility of mass search;
+2 HTTP Request Sampler - Specific HTTP requests sent to the server. The URL, method, parameters, and headers were configured.
 
-3 Crunch — dictionary generator for brute force;
+3 CSV Data Set Config (if necessary) - It was used to provide unique data (for example, different RFID codes or users) from a file.
 
-4 CeWL is a dictionary generator based on web content (for example, a company website).
+4 JSON Extractor / Regular Expression Extractor - The values were extracted from the server responses for analysis and subsequent use in other requests.
 
-### 🧠 5. Social engineering and phishing
+5 Asserts (Checks) - were used to validate the correctness of the response (for example, the presence of the 200 OK code or a specific text in the response).
 
-1 Social Engineering Toolkit (SET) is a powerful framework for simulating phishing attacks, creating fake websites, etc.;
+6 View Results Tree / Summary Report / Aggregate Report / Graph Results - Various visual tools for analyzing test results.
 
-2 BeEF (Browser Exploitation Framework) is a tool for attacking vulnerable browsers and extensions.
+## 🛠 Description of load scenarios
 
-### 🔒 6. Checking wireless networks
+To assess the stability of the access control and management system (ACS) under high load, individual load testing scenarios were developed for each key component. Each of the scenarios simulates the behavior of a large number of users accessing the system at the same time. This allowed us to obtain real performance indicators and identify potential bottlenecks.
 
-1 Aircrack-ng — a set of tools for hacking WEP/WPA/WPA2 networks;
+### 📶 Scenario for the RFID authentication module
 
-2 Reaver — a tool for bruteforcing WPS PIN codes;
+Purpose: To test the system's ability to process simultaneous access requests using RFID cards.
 
-3 Kismet is a system for detecting wireless networks and monitoring traffic.
+- Number of users: 200 virtual threads (users)
 
-### 🏗️ 7. Frameworks and automation
+- Request type: POST to the endpoint processing RFID cards (for example, /rfid/auth)
 
-1 The Metasploit Framework is one of the most popular frameworks for vulnerability development and exploitation.;
+- Request body: A JSON object of the form { "rfid": "04A3B2..." }
 
-2 ExploitDB + msfconsole is an exploit database with the ability to run automatically through the Metasploit console;
+- Number of iterations per user: 10
 
-3 Armitage is a GUI shell for Metasploit that simplifies attacks.
+- Pause between requests: minimal to simulate a massive data flow
 
-These tools make Kali Linux a universal platform for testing information security systems, including ACS, web applications, databases, local and wireless networks.
+- Expected result: HTTP 200 OK, response with full name and access status
 
-## 🛡️ Denial of Service Testing (DoS/DDoS)
+### 🧍Script for the biometric authentication module
 
-Denial of service testing using various types of DoS and DDoS attacks was conducted to assess the stability of the access control and management system (ACS), as well as related components (dashboards and the database web interface).
+The goal: To evaluate the performance of the system while simultaneously recognizing faces from cameras of different users.
 
-### 📶 Attacks used in testing
+- Number of users: 200
 
-#### Ping Flood 
+- Request type: POST to an endpoint that performs biometric authentication (for example, /face/auth)
 
-Is an attack in which an attacker sends a large number of ICMP Echo requests (ping) to the target host, depleting its resources for processing responses.
+- Request format: multipart/form-data with an embedded face image
 
-#### UDP Flood 
+- Image upload simulation: using fictitious photos of one or more users
 
-Numerous UDP packets are generated on random ports of the target machine. In response, the system is forced to send ICMP packets "port unavailable", which puts strain on the network and resources.
+- Number of iterations: 10 per thread
 
-#### SYN Flood 
+- Expected result: HTTP 200 OK, JSON with the field { "recognized": true/false }
 
-Is an attack at the stage of establishing a TCP connection. The attacker initiates many connections without completing them, as a result of which the target server spends resources "waiting" for the connections to complete.
+### 📝 Script for the page for adding a new user to the database
 
-### 🔧 Using the hping3 tool
+The goal: To check the stability of the registration web interface when adding new users en masse.
 
-The hping3 tool included in Kali Linux was used to simulate the above attacks. It allows you to flexibly generate arbitrary packets and control various network communication parameters (protocol type, TCP flags, frequency of sending, etc.).
+- Number of users: 200
 
-The commands to launch the attacks looked like this:
+- Request type: POST to the endpoint that processes registration (for example, /register)
 
-#### Ping Flood:
+- Body format: application/json with parameters:
 
 ````
-hping3 -1 -d 120 -s 12345 -p 80 --flood <target IP address>
-hping3 -1 -c 1000 --faster <target IP address> -V
-hping3 -1 --flood <target IP address>
-hping3 -1 --flood -a 1.2.3.4 <target IP address>
+    {
+"full_name": "Ivanov Ivan Ivanovich",
+"rfid": "04A3B2...",
+"photo": "base64 representation"
+    }
 ````
 
--1 - using the ICMP protocol (ping).
+- Simulation of unique data: via CSV Data Set Config
 
---flood - sending packages as quickly as possible, without waiting for responses
+- Number of iterations: 10
 
--d 120 - the size of the data in the packet (120 bytes).
+- Expected result: successful addition to the database (HTTP 201 or 200)
 
---fast - fast mode (but not maximum, like --flood).
+### 📊 Dashboard script
 
---count 100 - send 100 packages.
+Purpose: To test the stability of the monitoring page under heavy load, simulating the constant updating of data on inputs and outputs.
 
--a 1.2.3.4 is the fake (spoofed) IP address of the sender.
+- Number of users: 200
 
-![image](https://github.com/user-attachments/assets/9131180b-f4c7-4652-8fa2-2e257653bcbd)
+- Request type: GET to the endpoint of the dashboard (for example, /monitor)
 
-#### UDP Flood:
+- Refresh rate: every 1-2 seconds (simulating real interface auto-refresh)
 
-````
-hping3 --udp -p 80 --flood <target IP address>
-hping3 -2 -c 1000 --faster -p 1000 <target IP address> -V
-hping3 --udp --flood -a 1.2.3.4 <<target IP address>
-````
+- Duration of the test: 1 minute
 
---udp - using the UDP protocol.
+- Expected result: correct JSON or HTML with up-to-date information on each input/output
 
--- 2 - using the UDP protocol.
+## 📈 Load testing results
 
---flood - sending packages as fast as possible.
+During load testing, quantitative performance indicators of the ACS components were obtained, reflecting their behavior when processing a large volume of simultaneous requests. Testing was carried out using the Apache JMeter tool, with each session simulating 200 virtual users sending 10 requests within 5 seconds. The total load was 2000 requests for each module under test.
 
--p 1000 - indicates the destination port.
+### 🪪 Results for the RFID authentication module
 
--d 120 is the size of the data in the UDP packet.
+| Request Label | Total Requests | Avg. Response Time (ms) | 90% Completed Within (ms) | Errors | Throughput (req/s) |
+|---------------|----------------|--------------------------|-----------------------------|--------|---------------------|
+| HTTP Request  | 2000           | 177                      | 288                         | 0      | 294.9               |
 
--a 1.2.3.4 - spoofing of the sender's IP address.
+![image](https://github.com/user-attachments/assets/30abfb4e-a1c8-45d8-88b8-62cd70802927)
 
-![image](https://github.com/user-attachments/assets/27f1fc4f-589f-4200-9c97-93ca4b85ce35)
+Conclusion: The RFID module has shown stable operation, error-free and high throughput, which indicates that it is ready for use in conditions of intense input flow.
 
-#### SYN Flood:
+### 🧠 Results for the biometric authentication module
 
-````
-hping3 --syn -p 80 --flood <target IP address>
-hping3 --syn -c 1000 --faster -p 3000 <target IP address>
-hping3 --syn -p 80 -a 1.2.3.4 --flood <target IP address>
-````
+| Request Label | Total Requests | Avg. Response Time (ms) | 90% Completed Within (ms) | Errors | Throughput (req/s) |
+|---------------|----------------|--------------------------|-----------------------------|--------|---------------------|
+| HTTP Request  | 2000           | 233                      | 382                         | 0      | 275                 |
 
---syn - sending TCP packets with the SYN flag.
+![image](https://github.com/user-attachments/assets/412d1bb9-5515-4626-8436-d36a9994e6ac)
 
---flood - the maximum sending speed.
+Conclusion: Despite the resource-intensive nature of biometric processing, the system provided an acceptable response time and error-free operation under high load.
 
--p 3000 is the destination port.
+### 👤 Results for the page for adding users to the database
 
--c 10000 is the number of packets to send.
+| Request Label | Total Requests | Avg. Response Time (ms) | 90% Completed Within (ms) | Errors | Throughput (req/s) |
+|---------------|----------------|--------------------------|-----------------------------|--------|---------------------|
+| HTTP Request  | 2000           | 99                       | 182                         | 0      | 327.8               |
 
--a 1.2.3.4 - substitution of the source IP address.
+![image](https://github.com/user-attachments/assets/48a28828-810e-4a1d-871d-2dccd2ac1cac)
 
-![image](https://github.com/user-attachments/assets/33e9c75c-b6bb-49e1-80b4-04ca185e1601)
+Conclusion: The new User registration interface showed the lowest average response time among all modules, which indicates its high performance.
 
-### Test results
+### 📡 Results for the dashboard
 
-In all cases, when launching attacks, it was not possible to disrupt the performance of the ACS and its components. All incoming malicious packets were successfully rejected during the network interaction stage. This is confirmed by the absence of failures in the web interface and dashboard, as well as logging logs.
+| Request Label | Total Requests | Avg. Response Time (ms) | 90% Completed Within (ms) | Errors | Throughput (req/s) |
+|---------------|----------------|--------------------------|-----------------------------|--------|---------------------|
+| HTTP Request  | 2000           | 165                      | 275                         | 0      | 302.2               |
 
-The main reason for the failure of the attacks was the pre-configured security policy of the built-in Windows firewall, which blocks all incoming traffic that does not comply with the allowed rules. Similar protection can be implemented in Linux systems using iptables.
-Conclusions on sustainability
+![image](https://github.com/user-attachments/assets/4c9b2447-06d1-40c5-994f-5a59e17a10cc)
 
-The DoS/DDoS attacks carried out have shown the high resistance of ACS to external network influences. Pre-configuring the firewall allows you to effectively filter malicious traffic.
+Conclusion: The dashboard consistently handles frequent real-time data updates without failures and with an acceptable delay.
 
-Additionally, if the system is deployed in a production environment, it is recommended to use dedicated network equipment, such as pfSense, for more flexible and centralized traffic filtering.
+### 🏁 General conclusion based on the test results
 
-## 🚨 HTTP/2 Rapid Reset attack
+The ACS components have shown high performance and stability under load, simulating real-world operation in high-intensity conditions. All modules:
 
-### 🔍 The principle of operation
+- Successfully processed 2000 requests without errors;
 
-The HTTP/2 Rapid Reset attack uses the specifics of the HTTP/2 protocol, in which a client can establish multiple parallel streams within a single connection. The attacker opens a large number of such streams and immediately dumps them using the RST_STREAM frame. This leads to an excessive load on the server, as it is forced to allocate resources to process each of these requests, despite their instant reset.
+- They showed an average response time in the range of 99-233 ms;
 
-As a result, the server spends significant computing and network resources on managing a multitude of incomplete threads, which reduces its performance and can lead to denial of service (DoS) attacks.
+- We provided high throughput (275-327 requests per second).
 
-### ⚙️ Implementation of the attack
+Thus, the system is able to function effectively in real time with massive simultaneous access, which is critically important for ensuring the security and continuity of business processes at the facility.
 
-Specialized tools or custom scripts were used to carry out the attack, which:
+## ⚠️ Risks and Assumptions
 
-1 Establish multiple parallel HTTP/2 connections to the server.
+During load testing, the following assumptions and limitations were defined to ensure the reliability and consistency of the results:
 
-2 Streams are quickly initiated on each connection.
+#### 🛠️ Server and database configurations are optimal
 
-3 RST_STREAM frames are immediately sent to reset each stream.
+It is assumed that the server hosting the Access Control System (ACS), including its web server, backend services, and database engine (e.g., MySQL or PostgreSQL), are properly configured.
 
-4 Repeat this process with high frequency, creating a constant load.
+- The server has sufficient hardware resources (CPU, RAM, SSD).
 
-In our testing, these requests were sent from a single IP address, which allowed us to identify the possibility of blocking an attacker based on traffic analysis.
+- Database indexing and query optimization are implemented.
 
-### 🛡️ Results and protection
+- No background services interfere with performance.
 
-During the attack, the server began to experience increased load, which was recorded by monitoring. As a result of the automatic analysis of the frequency of requests, an abnormally high level of activity was detected from a specific IP address.
+#### 🧍‍♂️ Virtual users simulate realistic user behavior
 
-To protect against this attack, a Python script was implemented that:
+Apache JMeter is configured to emulate actual user interactions, including:
 
-- Monitors the number of HTTP/2 requests from each IP address.
+- RFID card scans with HTTP POST requests to the server.
 
-- If more than 5 requests are received from one IP address in one second, the IP address is automatically added to the block list.
+- Biometric image uploads and recognition response handling.
 
-- The blocked IP cannot access the system for one hour.
+- Form submission for new user registration.
 
-- After the blocking time expires, the IP is removed from the list and gets the opportunity to connect again.
+- Polling the monitoring dashboard with regular GET requests.
 
-````
-limiter = Limiter( 
-    get_remote_address,
-    app=app,
-    default_limits=["5 per second"]
-)
+#### 🧪 Testing is performed in an isolated environment
 
-blocked_users = {} 
+The test environment is detached from external influences to eliminate variability:
 
-def check_blocked_user(ip):
-    if ip in blocked_users:
-        block_time = blocked_users[ip]
-        if time.time() - block_time > 3600:
-            del blocked_users[ip]
-            return False
-        return True
-    return False
+- No other applications or network activity compete for bandwidth or CPU.
 
-def block_response():
-    return Response(
-        "<h1 style='color: red; font-size: 48px; text-align: center;'>Вы заблокированы</h1>",
-        status=403,
-        content_type='text/html; charset=utf-8'
-    )
+- Only the test clients and the system under test (SUT) are active.
 
-@app.before_request
-def before_request():
-    ip = get_remote_address() or request.remote_addr
-    if check_blocked_user(ip):
-        return block_response()
+- The server is not under maintenance or updates during testing.
 
-@app.errorhandler(429)
-def ratelimit_error(e):
-    ip = get_remote_address() or request.remote_addr
-    if ip:
-        blocked_users[ip] = time.time()
-    return block_response()
-````
-This mechanism allowed:
+#### 📏 Network latency is negligible or controlled
 
-![image](https://github.com/user-attachments/assets/eed4d1b6-766a-4d12-bec4-4100abb123b2)
+All load generators and the SUT reside on the same local network, or a network with minimal latency and packet loss, to ensure accurate measurement of system-level performance.
 
-![image](https://github.com/user-attachments/assets/7ab73194-4d6e-43f3-a530-9574455e1462)
+#### 📦 Static data assumptions
 
-1 Block the attacker's IP address, excluding him from access to the system.
+The system is preloaded with a typical number of users and records to reflect a realistic state of operation, but without excessive data growth (e.g., full database, archived logs).
 
-2 Save access to the system for legitimate users from other IP addresses.
+## ✅ Conclusions Based on Load Testing
 
-3 To prevent further use of the HTTP/2 Rapid Reset attack for the duration of the block.
+The results of the load testing provide key insights into the system's ability to handle concurrent users and high transaction volumes. Here's a detailed summary of what was learned:
 
-This method provided a balance between protection and ease of use of the system, minimizing false alarms and keeping the ACS operational for honest users.
+#### 📊 Component-Level Performance Analysis
 
-## 🔐 Brute Force Password Brute Force
+- RFID Authentication demonstrated a stable average response time of 177 ms with a maximum (90th percentile) under 288 ms, even with 2000 requests over a 5-second interval.
 
-### 🛠️ Attack using Fuzz and dictionary rockyou.txt
+- Biometric Authentication, being more resource-intensive (due to image processing), had a higher average response time of 233 ms, which remained acceptable.
 
-To assess the vulnerability of ACS to password brute force attacks, the Wfuzz tool was used, a specialized fuzzer for the HTTP protocol that allows you to automatically insert password options from the dictionary into the authorization form.
+- User Registration (DB write) operations were the fastest, with an average of 99 ms, indicating efficient backend logic and database interaction.
 
-A popular file was used as a dictionary. rockyou.txt — a collection of real passwords obtained from hacked databases. To speed up testing, the dictionary has been reduced to 2,000 of the most common passwords.
+- The Monitoring Dashboard handled continuous polling with 165 ms average response time, suitable for real-time updates.
 
-### 🎯 Example of the Wfuzz commands
+#### 🚀 Throughput and Load Tolerance
 
-Example 1: Brute-forcing a password through a POST request with the password parameter
+All modules showed high throughput:
 
-````
-wfuzz -c -z file,rockyou_short.txt -d "username=admin&password=FUZZ" -H "Content-Type: application/x-www-form-urlencoded" http://target-url/login
-````
+- Up to 327.8 req/sec on the registration interface.
 
-Substitutes words from the file rockyou_short.txt in the password field.
+- A consistent 0% error rate, indicating that no requests failed under load.
 
-Example 2: Going through the password and login at the same time (double substitution)
+#### 🔒 Stability and Scalability Confirmed
 
-````
-wfuzz -c -z file,usernames.txt -z file,rockyou_short.txt -d "username=FUZZ1&password=FUZZ2" -H "Content-Type: application/x-www-form-urlencoded" http://target-url/login
-````
+The ACS performed reliably without crashes, slowdowns, or timeout errors.
 
-Uses two dictionaries: one for logins (usernames.txt ), another for passwords (rockyou_short.txt ).
+- No resource exhaustion (e.g., memory leaks or CPU spikes) was observed.
 
-Example 3: Password brute force in a GET request (for example, authentication via URL parameters)
+- Logs and server monitoring indicated healthy operating conditions throughout the test.
 
-````
-wfuzz -c -z file,rockyou_short.txt http://target-url/login?username=admin&password=FUZZ
-````
+#### 📈 Preparedness for Real-World Deployment
 
-Example 4: Password brute force using session cookies
+The test scenarios confirm the system’s readiness for deployment in environments where dozens or even hundreds of users interact concurrently — such as universities, offices, or industrial facilities.
 
-````
-wfuzz -c -z file,rockyou_short.txt -d "username=admin&password=FUZZ" -H "Content-Type: application/x-www-form-urlencoded" -b "sessionid=abcdef123456" http://target-url/login
-````
+- The performance under simulated high load implies good scalability potential.
 
-The -b option adds a cookie to the request.
+- The system can accommodate growing user bases or peak-hour surges without infrastructure upgrades.
 
-Example 5: Brute-forcing a password with the User-Agent header
+#### 🔧 Future Recommendations
 
-````
-wfuzz -c -z file,rockyou_short.txt -d "username=admin&password=FUZZ" -H "Content-Type: application/x-www-form-urlencoded" -H "User-Agent: Mozilla/5.0" http://target-url/login
-````
+- Conduct extended-duration load tests (e.g., 1-hour stress tests).
 
-Example 6: Displaying only successful attempts (for example, HTTP codes are not 403)
+- Introduce chaos testing or fault injection to evaluate fault tolerance (e.g., simulate DB failure).
 
-````
-wfuzz -c -z file,rockyou_short.txt -d "username=admin&password=FUZZ" -H "Content-Type: application/x-www-form-urlencoded" --hc 403 http://target-url/login
-````
-
-The --hc 403 (hide codes) parameter hides all responses with the 403 code so as not to clog the output.
-
-
-### 🚫 System response (code 403)
-
-![image](https://github.com/user-attachments/assets/c2b62c91-7dc8-4602-96bd-90ed1f07979f)
-
-![image](https://github.com/user-attachments/assets/f59d2a15-b7a8-4fd5-8c35-69be104be832)
-
-![image](https://github.com/user-attachments/assets/2c10245f-0ee1-4b91-97e1-5843c549df26)
-
-In all cases, the server returned the HTTP status code 403 Forbidden when the allowed number of authorization attempts was exceeded.
-
-This indicates the successful activation of protective mechanisms that:
-
-- They track the number of failed attempts from each IP.
-
-- They restrict further access by blocking the attacker's IP.
-
-### 🛡️ Protection mechanisms (IP blocking)
-
-The protection is implemented using a Python script integrated into the server application. The main functions of the code:
-
-- Maintaining a counter of requests from each IP.
-
-- If the limit is exceeded (for example, more than 5 failed attempts per second), the IP is added to the block list.
-
-- A blocked IP cannot send requests within the set time (usually 1 hour).
-
-- After the time expires, the lock is lifted.
-
-An example of a code snippet implementing IP blocking:
-
-````
-ALLOWED_IPS = {'127.0.0.1', '192.168.100.2', '192.168.100.147'}
-
-@app.before_request 
-def limit_remote_addr():
-    if request.remote_addr not in ALLOWED_IPS:
-        abort(403)
-````
-
-## ✅ General conclusions about the security of ACS
-
-During the comprehensive testing of the access control and management system (ACS), its main components were tested for resistance to common types of attacks, including DoS/DDoS, HTTP/2 Rapid Reset, and Brute Force attacks.
-
-The results showed that the system successfully blocks network overload attempts (DoS/DDoS), thanks to properly configured firewalls and built-in firewall rules. The mechanism for blocking IP addresses when suspicious activity is detected, for example, during an HTTP/2 Rapid Reset attack and frequent unsuccessful authorization attempts, has demonstrated high efficiency, preventing further attacks by intruders without impairing access for legitimate users.
-
-In addition, the web interface and dashboard are equipped with password brute force protection, which is confirmed by server responses with the 403 code during brute force attempts. The IP address filtering mechanism used limits attacks from unknown sources.
-
-The use of modern tools and technologies such as Kali Linux, hping3 and Wfuzz has made it possible to identify potential vulnerabilities and eliminate them in a timely manner, which increases the overall security level of the system.
-
-## 🔧 Recommendations for improving security
-
-To further enhance the security of the ACS, it is recommended to regularly update the software and signature databases for protection tools to take into account new threats and exploits.
-
-It is recommended to implement two-factor authentication (2FA) for access to administrative dashboards and critical system components. This will make unauthorized access much more difficult, even if the password is compromised.
-
-It is also important to implement centralized monitoring and notification of suspicious activity using SIEM systems (Security Information and Event Management), which will allow for rapid response to threats.
-
-To increase traffic control, you can deploy an additional firewall (for example, pfSense) with more flexible filtering rules.
-
-In addition to technical measures, it is recommended to conduct periodic training events and trainings for employees in order to minimize the risks associated with the human factor.
-
-Finally, it is worth regularly conducting automated and manual security testing (penetration testing) using the extended Kali Linux toolkit.
-
-## 🔍 Opportunities for future research
-
-In the field of future research, it is promising to consider the development and implementation of adaptive anomaly detection systems (IDS/IPS) capable of automatically responding to new types of attacks.
-
-It is also important to explore the possibilities of using machine learning to analyze network traffic and user behavior in order to prevent complex attacks.
-
-Research can be aimed at identifying vulnerabilities of new protocols and technologies used in ACS and developing methods to protect them.
-
-The integration of mobile solutions and biometric systems is promising to increase the convenience and security of access.
-
-In addition, it is worth paying attention to the research and implementation of cryptographic methods for protecting communication channels and user data.
+- Monitor metrics like CPU, memory, disk I/O, and network traffic to ensure no hidden bottlenecks exist.
 
 # Authors
 If you have any questions, you can ask them to us by writing to us at email:
